@@ -1,16 +1,10 @@
+def is_valid_news_url(url):
+    invalid_patterns = [
+        "cloudflare.com", "5xx", "error", "404", "expired", "login", "ads"
+    ]
+    return not any(p in url for p in invalid_patterns)
 
-import os
 
-def post_to_pixnet(article):
-    accounts = os.getenv("PIXNET_ACCOUNTS", "")
-    account_list = accounts.split(",")
-
-    for acc in account_list:
-        try:
-            username, password = acc.split(":")
-            print(f"正在使用帳號 {username} 發文...")
-            print(f"標題: {article['title']}")
-            print(f"內容: {article['content']}")
-            print(f"標籤: {article['tags']}")
-        except Exception as e:
-            print(f"帳號 {acc} 發文失敗: {e}")
+# 範例：在實際抓新聞時使用
+def filter_valid_news_urls(urls):
+    return [url for url in urls if is_valid_news_url(url)]
