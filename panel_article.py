@@ -1,4 +1,3 @@
-from typing import List, Tuple
 from article_generator import generate_article
 from logger import append_log
 from utils import read_accounts

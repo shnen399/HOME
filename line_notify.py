@@ -1,5 +1,4 @@
 import os, requests
-
 def send_line_notify(message: str):
     token = os.getenv("LINE_NOTIFY_TOKEN")
     if not token:

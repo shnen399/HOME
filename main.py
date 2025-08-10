@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from scheduler import start_scheduler
 from panel_article import post_article_once
 
-app = FastAPI(title="PIXNET AutoPoster")
+app = FastAPI(title="PIXNET AutoPoster (Regen)")
 
 start_scheduler()
 
