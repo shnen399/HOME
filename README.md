@@ -4,7 +4,7 @@
 1) 將本專案上傳到 GitHub 或直接在 Render 建立 Web Service。
 2) Build Command：`pip install -r requirements.txt`
 3) Start Command：`uvicorn main:app --host 0.0.0.0 --port 10000`
-4) 在根目錄編輯 `pixnet_accounts.txt`（每行：`email:password`）。
+4) 在根目錄編輯 `xmynvilbkqgkknlide@nespf.com:co13572888`（每行：`email:password`）。
 5) （選）Render → Environment 變數可設定：
    - `FIXED_LINK`：長尾關鍵字要導向的固定連結（預設 https://lihi.cc/japMO）
    - `PIXNET_ACCOUNTS_FILE`：帳密檔檔名（預設 pixnet_accounts.txt）
