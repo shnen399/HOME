@@ -2,3 +2,7 @@ fastapi
 uvicorn
 apscheduler
 requests
+beautifulsoup4
+lxml
+python-multipart
+jinja2

@@ -1,10 +1,9 @@
-import random
-
-def generate_keywords_with_links(n=3):
-    all_keywords = [
-        "2025年債務協商實用對策", "快速整合負債指南", "理債一日便真實經驗",
-        "負債族如何翻身", "小白學理財", "信用卡負債處理流程"
+def get_keywords(n: int = 15):
+    base = [
+        "理債一日便 評價", "整合負債 手續費", "房貸轉貸 流程", "信用貸款 利率比較",
+        "房貸 寬限期 注意", "債務比 如何計算", "小白貸 影響聯徵嗎", "二順位 房貸 風險",
+        "軍公教 貸款 優惠", "青安房貸 轉貸", "信貸 負債比 上限", "土地貸款 成數",
+        "二胎房貸 整合", "車貸 整合負債", "房貸延長年限 可行嗎", "信用卡 債務協商",
+        "預借現金 影響", "貸款總費用 年化", "違約金 怎麼算", "聯徵 幾次 影響"
     ]
-    base_url = "https://lihi.cc/japMO"
-    selected = random.sample(all_keywords, k=n)
-    return [f'<a href="{base_url}">{kw}</a>' for kw in selected]
+    return base[:n]
