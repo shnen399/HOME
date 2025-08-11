@@ -2,6 +2,7 @@ import datetime as dt, os
 from logger import get_logger, mask_email
 from news_fetcher import get_hot_news
 from article_generator import generate_article
+from pixnet_api import create_article
 
 log = get_logger("core")
 
@@ -16,11 +17,22 @@ def pick_account(accounts_file="panel_accounts.txt"):
     raise RuntimeError("帳號檔為空")
 
 def real_pixnet_post(email: str, pwd: str, title: str, content: str) -> str:
-    # TODO: 換成你的真實發文函式，需回傳 PIXNET 文章連結
-    return "https://pixnet.example.com/blog/post/123456"
+    """
+    使用 PIXNET 官方 API 發文。
+    需要在環境變數設定：
+      - PIXNET_ACCESS_TOKEN：從 developer.pixnet.pro 取得
+      - PIXNET_BLOG_ID：你的部落格識別（通常是帳號名稱）
+    """
+    token = os.getenv("PIXNET_ACCESS_TOKEN", "").strip()
+    blog_id = os.getenv("PIXNET_BLOG_ID", "").strip()
+    if not token or not blog_id:
+        log.warning("缺少 PIXNET_ACCESS_TOKEN 或 PIXNET_BLOG_ID，改用 Demo 連結。")
+        return "https://pixnet.example.com/blog/post/123456"
+
+    res = create_article(access_token=token, blog_id=blog_id, title=title, body=content)
+    return res["url"]
 
 def gen_longtail_keywords() -> list:
-    # 產出 ~20字左右的中文長尾，含關鍵主題與年份/月份
     today = dt.datetime.now()
     ym = today.strftime("%Y年%m月")
     base = [
