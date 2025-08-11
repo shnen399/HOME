@@ -4,5 +4,11 @@ apscheduler
 requests
 beautifulsoup4
 lxml
-python-multipart
+selenium
+webdriver-manager
+feedparser
 jinja2
+python-multipart
+aiofiles
+pydantic
+sqlite-utils
