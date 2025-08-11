@@ -1,32 +1,26 @@
-# PIXNET AutoPoster — Playwright 版（Render 免下載部署）
+# Web & API
+fastapi>=0.110,<0.114
+uvicorn>=0.29,<0.32
 
-## 特色
-- FastAPI `/docs`、`/post_article`
-- Playwright 自動登入發文（較 Selenium 穩定）
-- APScheduler 每 3 分鐘自動發文（24/7）
-- 熱門新聞抓取 + 2000+字文案 + 長尾關鍵字（導向 FIXED_LINK）
-- 多帳號輪播、失敗 3 次自動刪除、LINE Notify
+# Scheduler
+apscheduler>=3.10,<3.11
 
-## 佈署
-1. 推到 GitHub → Render 建立 Web Service（Docker）或 Blueprint（render.yaml）。
-2. 設環境變數：
-   - `PIXNET_ACCOUNTS`（多行：`email:password:blog_url`）
-   - `FIXED_LINK`（例：`https://lihi.cc/japMO`）
-   - `LINE_NOTIFY_TOKEN`（選填）
-3. Deploy 完成 → 打開 `/docs` 測 `POST /post_article`。
+# HTTP & 解析
+requests>=2.31,<3.0
+beautifulsoup4>=4.12,<5.0
+lxml>=5.2,<6.0
 
-## 結構
-```
-.
-├─ render.yaml
-├─ Dockerfile
-├─ requirements.txt
-└─ app/
-   ├─ main.py
-   ├─ scheduler.py
-   ├─ panel_article.py
-   ├─ news_fetcher.py
-   ├─ article_generator.py
-   ├─ utils.py
-   └─ selectors.json
-```
+# 為了相依（例如有些套件需要），允許使用 3.1.x 的預編譯 wheel，避免編譯失敗
+greenlet>=3.1,<3.3
+然後在 Render 的 Build Command 用這一行（請貼在 Settings → Build & Deploy → Build Command）：
+
+lua
+複製
+編輯
+pip install --upgrade pip setuptools wheel && pip install "greenlet>=3.1,<3.3" --only-binary=:all: && pip install -r requirements.txt
+Start Command 請維持（或改成）：
+
+nginx
+複製
+編輯
+uvicorn main:app --host 0.0.0.0 --port $PORT
