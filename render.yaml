@@ -6,8 +6,8 @@ services:
     autoDeploy: true
     healthCheckPath: /
     buildCommand: |
-      pip install --upgrade pip
-      pip install greenlet==3.0.3
+      pip install --upgrade pip setuptools wheel
+      pip install greenlet==3.0.3 --only-binary=:all:
       pip install -r requirements.txt
     envVars:
       - key: PIXNET_ACCOUNTS
