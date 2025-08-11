@@ -1,26 +1,34 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, PlainTextResponse
 from scheduler import start_scheduler
-from core import post_article_once  # ✅ 改用 core 的流程
+from core import post_article_once  # ✅ 用 core 版本，才有三種紀錄
 
-app = FastAPI(title="PIXNET AutoPoster")
+app = FastAPI(
+    title="PIXNET AutoPoster",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 
-# 啟動排程（若已在跑，start_scheduler 會自動略過）
 start_scheduler()
 
 @app.get("/")
 def root():
     return {"message": "服務已啟動，請到 /docs 測試 POST /post_article"}
 
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+
 @app.post("/post_article")
 def post_article():
     try:
-        result = post_article_once()  # 會同時寫三種紀錄 & 打 Log
+        result = post_article_once()  # 會寫三種紀錄
         return JSONResponse({"ok": True, "result": result})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)})
 
-# ===== 下面三個端點：直接查看紀錄檔 =====
+# 三個紀錄檔查看
 @app.get("/records/post", response_class=PlainTextResponse)
 def get_post_records():
     try:
