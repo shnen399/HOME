@@ -1,15 +1,32 @@
-# PIXNET 自動發文（Ready-To-Run）
+# PIXNET AutoPoster — Playwright 版（Render 免下載部署）
 
-已內建真實帳號，解壓縮即可直接執行。
+## 特色
+- FastAPI `/docs`、`/post_article`
+- Playwright 自動登入發文（較 Selenium 穩定）
+- APScheduler 每 3 分鐘自動發文（24/7）
+- 熱門新聞抓取 + 2000+字文案 + 長尾關鍵字（導向 FIXED_LINK）
+- 多帳號輪播、失敗 3 次自動刪除、LINE Notify
 
-## 步驟
-1. `pip install -r requirements.txt`
-2. `uvicorn app:app --host 0.0.0.0 --port 8000`
-3. 打開 `http://127.0.0.1:8000/ui` 按「立即發文」測試（同時每 180 秒自動發文）
+## 佈署
+1. 推到 GitHub → Render 建立 Web Service（Docker）或 Blueprint（render.yaml）。
+2. 設環境變數：
+   - `PIXNET_ACCOUNTS`（多行：`email:password:blog_url`）
+   - `FIXED_LINK`（例：`https://lihi.cc/japMO`）
+   - `LINE_NOTIFY_TOKEN`（選填）
+3. Deploy 完成 → 打開 `/docs` 測 `POST /post_article`。
 
-## 參數
-- 預設每 180 秒排程一次（環境變數 `INTERVAL_SECONDS` 可改）
-- 連續失敗 ≥3 次自動刪帳號行
-- 成功發文抓文章連結記錄到 `發文紀錄.txt` 與 `data.db`
-
-若之後要新增帳號，直接編輯根目錄的 `pixnet_accounts.txt`，每行 `email:password`。
+## 結構
+```
+.
+├─ render.yaml
+├─ Dockerfile
+├─ requirements.txt
+└─ app/
+   ├─ main.py
+   ├─ scheduler.py
+   ├─ panel_article.py
+   ├─ news_fetcher.py
+   ├─ article_generator.py
+   ├─ utils.py
+   └─ selectors.json
+```
