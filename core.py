@@ -1,13 +1,11 @@
-import datetime as dt, os, json
-from typing import List
+# DEMO 版：保證輸出關鍵字到 Logs 與紀錄
+import datetime as dt
 from logger import get_logger, mask_email
 from news_fetcher import get_hot_news
 from article_generator import generate_article
 
 log = get_logger("core")
-FAIL_FILE = "login_failed_count.json"
 
-# 你原本已有的：挑帳號 / 真實發文函式（這裡放佔位，整合時會用你的版本）
 def pick_account(accounts_file="panel_accounts.txt"):
     with open(accounts_file, "r", encoding="utf-8") as f:
         for line in f:
@@ -19,42 +17,32 @@ def pick_account(accounts_file="panel_accounts.txt"):
     raise RuntimeError("帳號檔為空")
 
 def real_pixnet_post(email: str, pwd: str, title: str, content: str) -> str:
-    # TODO: 用你的發文函式替換並回傳文章連結
-    return "https://example.pixnet.net/blog/post/123456"
+    # TODO: 接回你的真實發文函式（此處先回 demo 連結）
+    return "https://pixnet.example.com/blog/post/123456"
 
-def _load_fail():
-    if os.path.exists(FAIL_FILE):
-        return json.load(open(FAIL_FILE, "r", encoding="utf-8"))
-    return {}
-
-def _save_fail(data):
-    json.dump(data, open(FAIL_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+def gen_longtail_keywords():
+    return [
+        "理債方案比較 2025 最新懶人包",
+        "信用貸款利率試算教學 步驟解析",
+        "小額信貸常見問題 與申請重點",
+        "房貸轉貸成本 試算與流程指南",
+        "整合負債注意事項 合法管道推薦",
+    ]
 
 def post_article_once(accounts_file="panel_accounts.txt"):
-    # 1) 抓新聞 + 紀錄
     news = get_hot_news(limit=3)
-
-    # 2) 生成關鍵字（請換成你的生成器）
-    keywords = [
-        "理債方案比較 2025 最新",
-        "信用貸款利率試算教學",
-        "小額信貸注意事項 懶人包",
-        "房貸轉貸流程 與成本說明",
-    ]
+    keywords = gen_longtail_keywords()
     log.info("本次長尾關鍵字：%s", "、".join(keywords))
 
-    # 3) 產文
     article = generate_article(news, keywords)
     title, content = article["title"], article["content"]
 
-    # 4) 帳號登入 + 發文
     email, pwd = pick_account(accounts_file)
     masked = mask_email(email)
     log.info("準備用帳號發文：%s，標題：%s", masked, title)
 
     url = real_pixnet_post(email, pwd, title, content)
 
-    # 5) 成功紀錄（含來源與關鍵字）
     ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     src_str = "；".join([f"{n['source']}|{n['title']}|{n['url']}" for n in news])
     kw_str  = "；".join(keywords)
