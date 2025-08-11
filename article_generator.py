@@ -16,7 +16,6 @@ def build_sources_block(news: List[Dict]) -> str:
     return "\n\n---\n### 參考來源\n" + "\n".join(lines) + "\n"
 
 def generate_article(news: List[Dict], keywords: List[str]) -> Dict:
-    # 這裡使用你現有的 2000+ 字生成邏輯；先放一段 placeholder
     body = "（此處接你的長文內容，保持 2000+ 字）"
     content = textwrap.dedent(f"""{body}""").strip()
     content += build_kw_block(keywords)

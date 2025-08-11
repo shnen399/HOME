@@ -1,5 +1,4 @@
-# DEMO 版：保證輸出關鍵字到 Logs 與紀錄
-import datetime as dt
+import datetime as dt, os
 from logger import get_logger, mask_email
 from news_fetcher import get_hot_news
 from article_generator import generate_article
@@ -17,17 +16,37 @@ def pick_account(accounts_file="panel_accounts.txt"):
     raise RuntimeError("帳號檔為空")
 
 def real_pixnet_post(email: str, pwd: str, title: str, content: str) -> str:
-    # TODO: 接回你的真實發文函式（此處先回 demo 連結）
+    # TODO: 換成你的真實發文函式，需回傳 PIXNET 文章連結
     return "https://pixnet.example.com/blog/post/123456"
 
-def gen_longtail_keywords():
-    return [
-        "理債方案比較 2025 最新懶人包",
-        "信用貸款利率試算教學 步驟解析",
-        "小額信貸常見問題 與申請重點",
-        "房貸轉貸成本 試算與流程指南",
-        "整合負債注意事項 合法管道推薦",
+def gen_longtail_keywords() -> list:
+    # 產出 ~20字左右的中文長尾，含關鍵主題與年份/月份
+    today = dt.datetime.now()
+    ym = today.strftime("%Y年%m月")
+    base = [
+        "理債一日便",
+        "信用貸款",
+        "小額信貸",
+        "房貸轉貸",
+        "整合負債",
+        "負債整合",
+        "利率試算",
+        "貸款注意事項",
     ]
+    templates = [
+        "{k} {ym} 最新方案比較",
+        "{k} {ym} 利率試算教學",
+        "{k} {ym} 申請條件與流程",
+        "{k} {ym} 常見問題 懶人包",
+        "{k} {ym} 合法管道與風險",
+    ]
+    out = []
+    for k in base:
+        for t in templates:
+            out.append(t.format(k=k, ym=ym))
+            if len(out) >= 20:
+                return out
+    return out
 
 def post_article_once(accounts_file="panel_accounts.txt"):
     news = get_hot_news(limit=3)
