@@ -100,9 +100,8 @@ def pixnet_login_and_post(user, pwd, title, content, tags):
             # 4) 填內容（CKEditor iframe）
             _fill_ckeditor_frame(page, content)
 
-            # 5)（選）填標籤：痞客邦標籤欄位有時候是動態元件，若你有固定 selector 可補上
-            # 例如：page.fill("#editArticle-header-tag-input", ", ".join(tags))
-
+           # 5) 填標籤
+page.fill("#editArticle-header-tag-input", ", ".join(tags))
             # 6) 發表
             page.click(SEL_PUBLISH_BTN)
 
