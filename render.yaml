@@ -9,6 +9,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install greenlet==3.0.3 --only-binary=:all:
       pip install -r requirements.txt
+      playwright install --with-deps
     envVars:
       - key: PIXNET_ACCOUNTS
         sync: false
