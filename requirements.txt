@@ -1,9 +1,8 @@
-fastapi==0.112.2
-uvicorn[standard]==0.30.5
-apscheduler==3.10.4
-requests==2.32.3
+fastapi
+uvicorn[standard]
 playwright
-python-dotenv==1.0.1
-beautifulsoup4
-lxml
+apscheduler
 httpx
+beautifulsoup4
+requests
+python-dotenv
