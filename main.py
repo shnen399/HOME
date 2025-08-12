@@ -1,7 +1,20 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, PlainTextResponse
-from scheduler import start_scheduler
-from core import post_article_once  # ✅ 用 core 版本，才有三種紀錄
+
+# 這兩個 import 可能會間接載入很多東西，建議保留在頂部，
+# 但 scheduler 啟動一定要 try/except，避免整個 app 起不來。
+try:
+    from scheduler import start_scheduler
+except Exception as e:
+    start_scheduler = None
+    print(f"[WARN] import scheduler 失敗：{e}")
+
+try:
+    from core import post_article_once
+except Exception as e:
+    # 讓 /docs 與 /healthz 仍可用
+    post_article_once = None
+    print(f"[WARN] import core.post_article_once 失敗：{e}")
 
 app = FastAPI(
     title="PIXNET AutoPoster",
@@ -10,42 +23,32 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-start_scheduler()
+# 啟動排程（不讓它把整個 API 帶崩）
+try:
+    if start_scheduler:
+        start_scheduler()
+    else:
+        print("[WARN] 排程未啟動（scheduler 未載入）")
+except Exception as e:
+    print(f"[WARN] start_scheduler 失敗：{e}")
 
-@app.get("/")
+@app.get("/", response_class=JSONResponse)
 def root():
-    return {"message": "服務已啟動，請到 /docs 測試 POST /post_article"}
+    return {"message": "服務正常運行中", "hint": "到 /docs 測試 POST /post_article"}
 
-@app.get("/healthz")
+@app.get("/healthz", response_class=PlainTextResponse)
 def healthz():
-    return {"ok": True}
+    return "OK"
 
-@app.post("/post_article")
+@app.post("/post_article", response_class=JSONResponse)
 def post_article():
+    if not post_article_once:
+        return JSONResponse(
+            {"ok": False, "error": "post_article_once 未載入，請查看啟動日誌"},
+            status_code=500,
+        )
     try:
-        result = post_article_once()  # 會寫三種紀錄
-        return JSONResponse({"ok": True, "result": result})
+        result = post_article_once()
+        return {"ok": True, "result": result}
     except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)})
-
-# 三個紀錄檔查看
-@app.get("/records/post", response_class=PlainTextResponse)
-def get_post_records():
-    try:
-        return open("發文紀錄.txt", "r", encoding="utf-8").read()
-    except FileNotFoundError:
-        return "尚無發文紀錄"
-
-@app.get("/records/news", response_class=PlainTextResponse)
-def get_news_records():
-    try:
-        return open("新聞紀錄.txt", "r", encoding="utf-8").read()
-    except FileNotFoundError:
-        return "尚無新聞紀錄"
-
-@app.get("/records/keywords", response_class=PlainTextResponse)
-def get_kw_records():
-    try:
-        return open("關鍵字紀錄.txt", "r", encoding="utf-8").read()
-    except FileNotFoundError:
-        return "尚無關鍵字紀錄"
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
