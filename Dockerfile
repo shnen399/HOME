@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# 安裝系統必要套件
+# 安裝系統必要套件與 Node.js 18
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
     libdrm2 \
     libgbm1 \
     libgtk-3-0 \
-    libnspr4 \
     libnss3 \
     libx11-6 \
     libx11-xcb1 \
@@ -30,19 +29,24 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# 安裝 Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# 升級 pip
 RUN pip install --upgrade pip
+
 WORKDIR /app
 
 # 安裝 Python 套件
 COPY requirements.txt .
-RUN if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+RUN pip install -r requirements.txt
 
-RUN pip install fastapi uvicorn playwright
-
-# 安裝 Playwright 瀏覽器依賴
+# 安裝 Playwright 依賴
 RUN python -m playwright install --with-deps
 
 COPY . .
 
-ENV PORT=10000
+EXPOSE 10000
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
