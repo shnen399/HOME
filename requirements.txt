@@ -1,20 +1,8 @@
-# --- API 服務 ---
-fastapi>=0.110,<0.116
-uvicorn[standard]>=0.29,<0.31
-
-# --- 自動化與排程 ---
-apscheduler>=3.10,<3.11
-
-# --- 爬蟲與自動化 ---
-playwright>=1.45,<1.47
-
-# --- 請求與解析 ---
-httpx>=0.27,<0.28
-beautifulsoup4>=4.12,<4.13
-requests>=2.31,<2.33
-
-# --- 環境變數管理 ---
-python-dotenv>=1.0,<2.0
-
-# --- 如果真的需要資料庫相關（可移除） ---
-greenlet>=3.1,<3.3
+fastapi
+uvicorn[standard]
+playwright
+apscheduler
+httpx
+beautifulsoup4
+requests
+python-dotenv
