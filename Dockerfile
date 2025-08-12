@@ -42,9 +42,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# 安裝 Playwright 依賴
-RUN python -m playwright install --with-deps
+# 安裝 fastapi、uvicorn、playwright 並加上 Playwright 瀏覽器依賴
+RUN pip install fastapi uvicorn playwright \
+    && python -m playwright install --with-deps
 
+# 複製專案檔案
 COPY . .
 
 EXPOSE 10000
