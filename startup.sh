@@ -1,11 +1,14 @@
-#!/usr/bin/env bash
-set -euxo pipefail
-
-# 若 build 階段沒裝好，這裡補裝一次
-if ! ls /opt/render/.cache/ms-playwright/*/chrome-linux/headless_shell >/dev/null 2>&1; then
-  playwright install chromium
-  playwright install-deps || true
-fi
-
-# 啟動 FastAPI（Render 會提供 $PORT）
-uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+    #!/usr/bin/env bash
+    set -e
+    # Optional: verify browsers exist (no-op if already installed)
+    python - <<'PY'
+print("[start] Verifying Playwright import...")
+import playwright  # noqa
+print("[start] OK.")
+PY
+    # Start FastAPI app (adjust module:app if different)
+    APP_MODULE=${APP_MODULE:-main:app}
+    HOST=0.0.0.0
+    PORT=${PORT:-10000}
+    echo "[start] Launching Uvicorn ${APP_MODULE} on :${PORT}"
+    exec uvicorn "$APP_MODULE" --host "$HOST" --port "$PORT"
