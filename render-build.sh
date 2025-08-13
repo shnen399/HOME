@@ -1,4 +1,4 @@
-#！/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 echo "==> 安裝 Python 套件"
