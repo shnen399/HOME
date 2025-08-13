@@ -1,53 +1,166 @@
+# main.py  — 最終版（會真的發到痞客邦）
+
+import os
+import json
+import traceback
+from typing import Tuple, List
+
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from apscheduler.schedulers.background import BackgroundScheduler
-import logging
+from fastapi.responses import JSONResponse, PlainTextResponse
 
-app = FastAPI(title="PIXNET AutoPoster")
+# 若專案有 scheduler.start_scheduler() 就啟用；沒有也不會壞
+try:
+    from scheduler import start_scheduler  # type: ignore
+except Exception:
+    start_scheduler = None  # 沒有就略過
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
-log = logging.getLogger(__name__)
+app = FastAPI(
+    title="PIXNET 自動海報",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 
-# 測試文章生成函數
-def article_generator():
-    return (
-        "自動發文：測試標題",
-        """<h2>測試內文</h2><p>這是後備內文，代表你的 article_generator 還沒就緒。</p>""",
-        ["自動", "測試"]
-    )
-
-def post_article_once():
-    title, content, tags = article_generator()
-    log.info(f"準備發文：{title}")
-    # 這裡放實際發文邏輯，例如調用 PIXNET API
-    return {"status": "success", "title": title}
-
-# 排程器設定
-scheduler = BackgroundScheduler(timezone="Asia/Taipei")
-
-def _job():
+# 啟動背景排程（如果有）
+if start_scheduler:
     try:
-        res = post_article_once()
-        log.info(f"自動發文結果：{res}")
-    except Exception as e:
-        log.exception(f"自動發文錯誤：{e}")
+        start_scheduler()
+    except Exception:
+        pass
 
-def start_scheduler():
+
+# ---------- 小工具 ----------
+
+def _read_accounts_from_env() -> List[Tuple[str, str]]:
+    """
+    從環境變數 PIXNET_ACCOUNTS 讀帳密，多行，每行 email:password
+    """
+    raw = os.getenv("PIXNET_ACCOUNTS", "").strip()
+    out: List[Tuple[str, str]] = []
+    if not raw:
+        return out
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line or ":" not in line:
+            continue
+        email, pwd = line.split(":", 1)
+        out.append((email.strip(), pwd.strip()))
+    return out
+
+
+def _read_accounts_from_file(file_name: str) -> List[Tuple[str, str]]:
+    out: List[Tuple[str, str]] = []
+    if not os.path.exists(file_name):
+        return out
+    with open(file_name, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or ":" not in line:
+                continue
+            email, pwd = line.split(":", 1)
+            out.append((email.strip(), pwd.strip()))
+    return out
+
+
+def pick_account() -> Tuple[str, str]:
+    """
+    依序嘗試：環境變數 → panel_accounts.txt → pixnet_accounts.txt
+    取第一組帳密。
+    """
+    for src in (
+        _read_accounts_from_env(),
+        _read_accounts_from_file("panel_accounts.txt"),
+        _read_accounts_from_file("pixnet_accounts.txt"),
+    ):
+        if src:
+            return src[0]
+    raise RuntimeError("找不到 PIXNET 帳密。請設定環境變數 PIXNET_ACCOUNTS 或提供 panel_accounts.txt / pixnet_accounts.txt。")
+
+
+def get_article() -> Tuple[str, str, List[str]]:
+    """
+    取得要發的 〈標題, 內容HTML, 標籤清單〉
+    若存在 article_generator.generate_article() 則使用；
+    否則用簡易範本。
+    """
     try:
-        scheduler.add_job(_job, "interval", minutes=3, id="auto_post", replace_existing=True)
-        scheduler.start()
-        log.info("Scheduler 啟動完成（每 3 分鐘執行一次）。")
-    except Exception as e:
-        log.exception(f"啟動排程失敗：{e}")
+        from article_generator import generate_article  # type: ignore
+        data = generate_article()
+        title = data.get("title") or "自動發文：測試標題"
+        content = data.get("content") or "<p>這是自動產生的測試內文。</p>"
+        tags = data.get("tags") or ["自動", "測試"]
+        if not isinstance(tags, list):
+            tags = ["自動", "測試"]
+        return title, content, tags  # type: ignore
+    except Exception:
+        # 後備方案（確保不會噴字串未結束）
+        return (
+            "自動發文：測試標題",
+            "<h2>測試內文</h2><p>這是後備內文，代表你的 article_generator 還沒就緒。</p>",
+            ["自動", "測試"],
+        )
 
-# 啟動排程
-start_scheduler()
 
-@app.get("/")
+def _post_via_poster(email: str, password: str, title: str, content: str, tags: List[str]) -> Tuple[bool, str]:
+    """
+    優先呼叫 poster.post_once(email, password, title, content, tags) -> (ok, result/url)
+    沒有 poster 模組時，退回 post_to_pixnet.pixnet_login_and_post(...)
+    """
+    # 先試新版 poster
+    try:
+        from poster import post_once  # type: ignore
+        ok, result = post_once(email, password, title, content, tags)
+        return bool(ok), str(result)
+    except Exception:
+        pass
+
+    # 退回舊版 post_to_pixnet
+    try:
+        from post_to_pixnet import pixnet_login_and_post  # type: ignore
+        ok, result = pixnet_login_and_post(email, password, title, content, tags)
+        return bool(ok), str(result)
+    except Exception as e2:
+        return False, f"無法發文：{e2}\n{traceback.format_exc()}"
+
+
+# ---------- 路由 ----------
+
+@app.get("/", response_class=JSONResponse)
 def root():
-    return {"message": "PIXNET 自動發文系統已啟動"}
+    return {
+        "message": "服務正常運行中",
+        "hint": "到 /docs 打開 Swagger，按 POST /post_article 測試發文",
+    }
 
-@app.get("/post_article")
+
+@app.get("/healthz", response_class=PlainTextResponse)
+def healthz():
+    return "OK: True"
+
+
+@app.post("/post_article", response_class=JSONResponse)
 def post_article():
-    res = post_article_once()
-    return JSONResponse(content=res)
+    """
+    發一篇文章到痞客邦：
+    1) 取帳號密碼（env 或檔案）
+    2) 生成文章（article_generator 如有）
+    3) 透過 poster 或 post_to_pixnet 發文
+    4) 回傳 success / fail 與細節
+    """
+    try:
+        email, password = pick_account()
+        title, content, tags = get_article()
+
+        ok, result = _post_via_poster(email, password, title, content, tags)
+
+        if ok:
+            # result 預期為文章 URL
+            return {"status": "success", "url": result, "title": title, "tags": tags[:5]}
+        else:
+            return {"status": "fail", "error": result, "title": title, "tags": tags[:5]}
+    except Exception as e:
+        return {
+            "status": "error",
+            "exception": str(e),
+            "trace": traceback.format_exc(),
+        }
