@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "bash render-build.sh",
-    "start": "node server.js || python main.py || gunicorn app:app || uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"
+    "build": "echo skip-build",
+    "start": "bash startup.sh"
   },
   "engines": {
     "node": "20.x"
