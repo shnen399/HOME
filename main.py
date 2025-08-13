@@ -1,7 +1,6 @@
-# main.py — 覆蓋版
+# main.py — 修正版（可直接覆蓋）
 
 import os
-import json
 import traceback
 import logging
 from typing import Tuple, List
@@ -37,6 +36,7 @@ if start_scheduler:
 # ---------- 小工具 ----------
 
 def _read_accounts_from_env() -> List[Tuple[str, str]]:
+    """從環境變數 PIXNET_ACCOUNTS 讀帳密，多行，每行 email:password"""
     raw = os.getenv("PIXNET_ACCOUNTS", "").strip()
     out: List[Tuple[str, str]] = []
     if not raw:
@@ -65,6 +65,10 @@ def _read_accounts_from_file(file_name: str) -> List[Tuple[str, str]]:
 
 
 def pick_account() -> Tuple[str, str]:
+    """
+    依序嘗試：環境變數 → panel_accounts.txt → pixnet_accounts.txt
+    取第一組帳密。
+    """
     for src in (
         _read_accounts_from_env(),
         _read_accounts_from_file("panel_accounts.txt"),
@@ -76,6 +80,11 @@ def pick_account() -> Tuple[str, str]:
 
 
 def get_article() -> Tuple[str, str, List[str]]:
+    """
+    取得要發的 〈標題, 內容HTML, 標籤清單〉
+    若存在 article_generator.generate_article() 則使用；
+    否則用簡易範本。
+    """
     try:
         from article_generator import generate_article  # type: ignore
         data = generate_article()
@@ -86,6 +95,7 @@ def get_article() -> Tuple[str, str, List[str]]:
             tags = ["自動", "測試"]
         return title, content, tags  # type: ignore
     except Exception:
+        # 後備方案（內容改用三引號，避免 SyntaxError）
         return (
             "自動發文：測試標題",
-            "<h2>測試內文</h2><p>這是後備內文，代表你的 article_generator 還沒就緒。</p
+            """<h2>測試內文</h2><p
