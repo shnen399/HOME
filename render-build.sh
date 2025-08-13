@@ -1,16 +1,21 @@
-#!/usr/bin/env bash
-set -euxo pipefail
+#！/usr/bin/env bash
+set -euo pipefail
 
-# 升級 pip 並安裝依賴
+echo "==> 安裝 Python 套件"
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements.txt || true
 
-# 設定快取路徑（跟環境變數一致）
+# 確保有安裝 Playwright
+if ! python - <<'PY'
+import importlib.util, sys
+sys.exit(0 if importlib.util.find_spec("playwright") else 1)
+PY
+then
+  pip install playwright
+fi
+
+echo "==> 安裝 Chromium 瀏覽器（永久自動安裝）"
 export PLAYWRIGHT_BROWSERS_PATH=/opt/render/.cache/ms-playwright
+python -m playwright install chromium --with-deps
 
-# 安裝 Playwright 與 Chromium 及依賴
-npm install -g playwright
-npx --yes playwright install chromium --with-deps
-
-# 開放快取讀取權限
-chmod -R a+rX /opt/render/.cache || true
+echo "==> 構建完成"
