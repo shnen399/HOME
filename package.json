@@ -1,0 +1,12 @@
+{
+  "name": "render-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo skip-build",
+    "start": "node server.js || python main.py || gunicorn app:app || uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
